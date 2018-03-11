@@ -1,11 +1,13 @@
 #ifndef device_h
 #define device_h
 
-#define BLOCK_SIZE 4096
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define BLOCK_SIZE 4096
 
 void device_new_device(const char *path);
 void device_open(const char *path);

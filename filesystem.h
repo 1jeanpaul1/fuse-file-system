@@ -28,9 +28,11 @@ struct directory
     struct directory_entry entries[MAX_DIRECTORY_ENTRIES];
 };
 
-void filesystem_init_bitmap();
 void filesystem_set_bit(int n, int value);
 int filesystem_get_free_block();
+
+void filesystem_load_map();
+void filesystem_update_map();
 
 #ifdef __cplusplus
 }
