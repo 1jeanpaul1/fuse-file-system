@@ -1,4 +1,5 @@
 #include "device.h"
+#include "filesystem.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -11,17 +12,17 @@ void device_new_disk(const char *path)
     printf("%s\n", __FUNCTION__);
     f=fopen(path, "w+");
     
-    uint32_t empty_block[BLOCK_SIZE];
+    uint32_t empty_blocks[BLOCK_SIZE];
     int i;
     for(i=1; i<BLOCK_SIZE; i++)
 	{
-       empty_block[i]=0xFFFFFFFF;
+       empty_blocks[i]=0xFFFFFFFF;
 	}
-    empty_block[0]=0xFFFFFFE0;// Blocks 0-4 as used 0-3 bitmap 4 root
+    empty_blocks[0]=0xFFFFFFE0;
 
     unsigned char *char_map=(unsigned char*)calloc(1, BLOCK_SIZE*sizeof(uint32_t));
     unsigned char *char_map_start=char_map;
-    memcpy(&char_map[0], empty_block, BLOCK_SIZE*sizeof(uint32_t));
+    memcpy(&char_map[0], empty_blocks, BLOCK_SIZE*sizeof(uint32_t));
 
     //Bits map
     device_write_block(char_map, 0);
@@ -34,6 +35,16 @@ void device_new_disk(const char *path)
     
     char_map=char_map_start;
     free(char_map);
+
+    //Root
+    struct Directory root;
+    strcpy(root.name, "root");
+
+    unsigned char *char_root=(unsigned char*)calloc(1, sizeof(root));
+    memcpy(&char_root[0], &root, sizeof(root));
+    device_write_block(char_root, 4);
+
+    free(char_root);
 }
 
 void device_open(const char *path) 

@@ -8,24 +8,24 @@ extern "C" {
 #endif
 
 #define MAX_DIRECTORY_NAME 32
-#define ENTRY_SIZE 32
-#define MAX_FILE_NAME 27
+#define ENTRY_SIZE sizeof(struct Directory_entry)
+#define MAX_FILE_NAME 23
 
 #define MAX_BLOCKS_PER_FILE BLOCK_SIZE/sizeof(int)
 #define MAX_FILE_SIZE MAX_BLOCKS_PER_FILE*BLOCK_SIZE
-#define MAX_DIRECTORY_ENTRIES BLOCK_SIZE/ENTRY_SIZE-1
+#define MAX_DIRECTORY_ENTRIES (BLOCK_SIZE-MAX_DIRECTORY_NAME)/ENTRY_SIZE
 
-struct directory_entry
+struct Directory_entry
 {
     char name[MAX_FILE_NAME];
     int index_block;
     char isDir;
 };
 
-struct directory 
+struct Directory 
 {
     char name[MAX_DIRECTORY_NAME];
-    struct directory_entry entries[MAX_DIRECTORY_ENTRIES];
+    struct Directory_entry entries[MAX_DIRECTORY_ENTRIES];
 };
 
 void filesystem_set_bit(int n, int value);
