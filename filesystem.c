@@ -10,6 +10,14 @@
 
 uint32_t map[BLOCK_SIZE];
 
+void filesystem_init_bitmap()
+{
+    for(int i=0; i<BLOCK_SIZE; i++)
+    {
+        map[i]=0xFFFFFFFF;
+    }
+}
+
 void filesystem_set_bit(int n, int value)
 {
     if(value)
