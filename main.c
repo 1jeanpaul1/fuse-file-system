@@ -1,15 +1,27 @@
 #include "filesystem.h"
 #include <stdio.h>
 
+static struct fuse_operations operations={
+    .init=filesystem_init,
+    .getattr=filesystem_getattr,
+    .mkdir=filesystem_mkdir,
+    .readdir=filesystem_readdir
+};
+
 int main(int argc, char *argv[])
 {
-    filesystem_init_bitmap();
-    printf("%d\n", filesystem_get_free_block());
-    filesystem_set_bit(0, 0);
-    filesystem_set_bit(1, 0);
-    filesystem_set_bit(2, 0);
-    filesystem_set_bit(3, 0);
-    printf("%d\n", filesystem_get_free_block());
-    filesystem_set_bit(3, 1);
-    printf("%d\n", filesystem_get_free_block());
+    device_open(argv[1]);
+
+    int i=1;
+    for(; i < argc; i++)
+    {
+		argv[i] = argv[i+1];
+	}
+	argc--;
+
+	int fuse_stat=fuse_main(argc, argv, &operations, NULL);
+
+    device_close();
+
+	return fuse_stat;
 }
