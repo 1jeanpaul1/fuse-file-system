@@ -45,6 +45,7 @@ struct Directory_entry *filesystem_get_entry(const char *name);
 int filesystem_getattr(const char *path, struct stat *statbuf);
 int filesystem_mkdir(const char *path, mode_t mode);
 int filesystem_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
+int filesystem_mknod(const char *path, mode_t mode, dev_t dev);
 
 #ifdef __cplusplus
 }

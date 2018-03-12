@@ -5,7 +5,8 @@ static struct fuse_operations operations={
     .init=filesystem_init,
     .getattr=filesystem_getattr,
     .mkdir=filesystem_mkdir,
-    .readdir=filesystem_readdir
+    .readdir=filesystem_readdir,
+    .mknod=filesystem_mknod
 };
 
 int main(int argc, char *argv[])
