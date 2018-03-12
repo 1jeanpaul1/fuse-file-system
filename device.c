@@ -9,7 +9,7 @@ static FILE *f;
 
 void device_new_disk(const char *path)
 {
-    printf("%s\n", __FUNCTION__);
+    //printf("%s\n", __FUNCTION__);
     f=fopen(path, "w+");
     
     uint32_t empty_blocks[BLOCK_SIZE];
@@ -49,7 +49,7 @@ void device_new_disk(const char *path)
 
 void device_open(const char *path) 
 {
-    printf("%s\n", __FUNCTION__);
+    //printf("%s\n", __FUNCTION__);
     f=fopen(path, "r+");
 	
     if(f==NULL)

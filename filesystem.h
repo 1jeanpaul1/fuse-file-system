@@ -2,6 +2,9 @@
 #define filesystem_h
 
 #include "device.h"
+#include <fuse.h>
+#include <string.h>
+#include <errno.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,6 +36,15 @@ int filesystem_get_free_block();
 
 void filesystem_load_map();
 void filesystem_update_map();
+void filesystem_load_root();
+void filesystem_update_root();
+struct Directory* filesystem_load_directory(int n);
+
+void filesystem_init(struct fuse_conn_info *conn);
+struct Directory_entry *filesystem_get_entry(const char *name);
+int filesystem_getattr(const char *path, struct stat *statbuf);
+int filesystem_mkdir(const char *path, mode_t mode);
+int filesystem_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
 
 #ifdef __cplusplus
 }
