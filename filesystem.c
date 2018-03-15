@@ -553,3 +553,75 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
 
     return strlen(info);
 }
+
+int filesystem_rename(const char *path, const char *newpath)
+{
+    printf("%s\n", __FUNCTION__);
+
+    int i;
+    int in_root=1;
+    for(i=1; i<MAX_DIRECTORY_NAME; i++)
+    {
+        if(path[i]=='/')
+        {
+            in_root=0;
+            break;
+        }
+    }
+
+    if(in_root)
+    {
+        struct Directory_entry* entry=filesystem_get_entry(&path[0]);
+
+        if(entry==NULL)
+        {
+            return -ENOENT;
+        }
+
+        strcpy(entry->name, &newpath[1]);
+
+        filesystem_update_root();
+        return 0;
+    }
+    else
+    {
+        char directory_name[MAX_DIRECTORY_NAME];
+        memcpy(&directory_name, &path[0], i);
+        directory_name[i]=0;
+        struct Directory_entry* entry=filesystem_get_entry(&directory_name[0]);
+
+        if(entry==NULL)
+        {
+            return -ENOENT;;
+        }
+
+        struct Directory *directory=filesystem_load_directory(entry->index_block);
+
+        char file_name[MAX_DIRECTORY_NAME];
+        strcpy(file_name, &path[i+1]);
+
+        int name_start=i+1;
+
+        i=0;
+        while(i<MAX_DIRECTORY_ENTRIES)
+        {    
+            if(directory->entries[i].index_block!=0)
+            {
+                if(strcmp(file_name, directory->entries[i].name)==0)
+                {
+                    strcpy(directory->entries[i].name, &newpath[name_start]);
+
+                    unsigned char *char_directory=(unsigned char*)calloc(1, sizeof(*directory));
+                    memcpy(&char_directory[0], directory, sizeof(*directory));
+                    device_write_block(char_directory, entry->index_block);
+                    free(char_directory);
+
+                    return 0;
+                }
+            }   
+            i++;
+        }
+        return -ENOENT;
+    }
+    return -ENOENT;
+}

@@ -54,6 +54,7 @@ int filesystem_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, o
 int filesystem_mknod(const char *path, mode_t mode, dev_t dev);
 int filesystem_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo);
 int filesystem_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) ;
+int filesystem_rename(const char *path, const char *newpath);
 
 #ifdef __cplusplus
 }

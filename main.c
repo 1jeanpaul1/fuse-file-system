@@ -8,7 +8,8 @@ static struct fuse_operations operations={
     .readdir=filesystem_readdir,
     .mknod=filesystem_mknod,
     .write=filesystem_write,
-    .read=filesystem_read
+    .read=filesystem_read,
+    .rename=filesystem_rename
 };
 
 int main(int argc, char *argv[])
