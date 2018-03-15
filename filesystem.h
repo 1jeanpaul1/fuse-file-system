@@ -31,6 +31,11 @@ struct Directory
     struct Directory_entry entries[MAX_DIRECTORY_ENTRIES];
 };
 
+struct Index_block
+{
+    int blocks[MAX_BLOCKS_PER_FILE];
+};
+
 void filesystem_set_bit(int n, int value);
 int filesystem_get_free_block();
 
@@ -46,6 +51,8 @@ int filesystem_getattr(const char *path, struct stat *statbuf);
 int filesystem_mkdir(const char *path, mode_t mode);
 int filesystem_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
 int filesystem_mknod(const char *path, mode_t mode, dev_t dev);
+int filesystem_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo);
+int filesystem_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) ;
 
 #ifdef __cplusplus
 }
