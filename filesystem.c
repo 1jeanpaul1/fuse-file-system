@@ -115,11 +115,13 @@ struct Directory* filesystem_load_directory(int n)
     return directory;
 }
 
-void filesystem_init(struct fuse_conn_info *conn) 
+void* filesystem_init(struct fuse_conn_info *conn) 
 {
     printf("%s\n", __FUNCTION__);
     filesystem_load_map();
     filesystem_load_root();
+
+    return NULL;
 }
 
 struct Directory_entry *filesystem_get_entry(const char *name)
@@ -180,6 +182,37 @@ struct Directory_entry *filesystem_get_entry(const char *name)
     return NULL;
 }
 
+void filesystem_get_file_size(struct Directory_entry* entry, int *size, int *blocks)
+{
+    *blocks=0;
+    *size=0;
+
+    unsigned char *char_index=(unsigned char*)calloc(1, sizeof(struct Index_block));
+    device_read_block(char_index, entry->index_block);
+
+    struct Index_block *index_block=(struct Index_block *)calloc(1, sizeof(struct Index_block));
+
+    memcpy(index_block, &char_index[0], sizeof(*index_block));
+    free(char_index);
+
+    int i;
+    for(i=0; index_block->blocks[i]!=0; i++)
+    {
+        (*blocks)++;
+    }
+
+    for(i=0; i<(*blocks)-1; i++)
+    {
+        (*size)+=BLOCK_SIZE;
+    }
+
+    char *block_info=(char *)calloc(1, BLOCK_SIZE);
+    device_read_block((unsigned char*) block_info, index_block->blocks[i]);
+    (*size)+=strlen(block_info);
+
+    free(block_info);
+}
+
 int filesystem_getattr(const char *path, struct stat *statbuf)
 {
     printf("%s\n", __FUNCTION__);
@@ -215,15 +248,17 @@ int filesystem_getattr(const char *path, struct stat *statbuf)
         }
         else
         {
+            int size, blocks;
+            filesystem_get_file_size(entry, &size, &blocks);
+
             statbuf->st_mode=S_IFREG | 0777;
             statbuf->st_nlink=1;
             statbuf->st_ino=0;
             statbuf->st_uid=0;
             statbuf->st_gid=0;
-            //TO DO
-            statbuf->st_size=BLOCK_SIZE; 
+            statbuf->st_size=size; 
             statbuf->st_blksize=BLOCK_SIZE;
-            statbuf->st_blocks=1;
+            statbuf->st_blocks=blocks;
         }
     }
     return 0;
@@ -420,6 +455,7 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
 
     memcpy(index_block, &char_index[0], sizeof(*index_block));
     free(char_index);
+    int new_block=0;
 
     int i;
     for(i=0; i<MAX_BLOCKS_PER_FILE; i++)
@@ -431,18 +467,49 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
     }
     //TO DO
 
-    int new_block=filesystem_get_free_block();
-    filesystem_set_bit(new_block, 0);
-    index_block->blocks[i]=new_block;
+    if(i!=0)
+    {
+        char *block_info=(char *)calloc(1, BLOCK_SIZE);
+        device_read_block((unsigned char*) block_info, index_block->blocks[i-1]);
 
-    char_index=(unsigned char*)calloc(1, sizeof(*index_block));
-    memcpy(&char_index[0], index_block, sizeof(*index_block));
-    device_write_block(char_index, entry->index_block);
-    free(char_index);
+        if(strlen(block_info)<BLOCK_SIZE)
+        {
+            i--;
+        }
+        else
+        {
+            new_block=filesystem_get_free_block();
+            filesystem_set_bit(new_block, 0);
+            index_block->blocks[i]=new_block;
+
+            char_index=(unsigned char*)calloc(1, sizeof(*index_block));
+            memcpy(&char_index[0], index_block, sizeof(*index_block));
+            device_write_block(char_index, entry->index_block);
+            free(char_index);
+        }
+    }
+    else
+    {
+        new_block=filesystem_get_free_block();
+        filesystem_set_bit(new_block, 0);
+        index_block->blocks[i]=new_block;
+
+        char_index=(unsigned char*)calloc(1, sizeof(*index_block));
+        memcpy(&char_index[0], index_block, sizeof(*index_block));
+        device_write_block(char_index, entry->index_block);
+        free(char_index);
+    }
 
     unsigned char *char_info=(unsigned char*)calloc(1, sizeof(BLOCK_SIZE));
-    memcpy(&char_info[0], buf, size);
-    device_write_block(char_info, new_block);
+        
+    if(!new_block)
+    {
+        device_read_block(char_info, index_block->blocks[i]);
+    }
+
+    memcpy(&char_info[offset], buf, size);
+    device_write_block(char_info,  index_block->blocks[i]);
+
     free(char_info);
 
     return size;
@@ -461,8 +528,6 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
 
     char *info=(char *)calloc(1, MAX_FILE_SIZE);
 
-    printf("\n%d\n\n", entry->index_block);
-
     unsigned char *char_index=(unsigned char*)calloc(1, sizeof(struct Index_block));
     device_read_block(char_index, entry->index_block);
 
@@ -478,14 +543,12 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
         {
             char *block_info=(char *)calloc(1, BLOCK_SIZE);
             device_read_block((unsigned char*) block_info, index_block->blocks[x]);
-            printf("%d %s\n", x, block_info);
 
             strcat(info, block_info);
             free(block_info);
         }
     }
 
-    printf("%d %s\n", strlen(info), info);
     memcpy(buf, &info[0], strlen(info));
 
     return strlen(info);

@@ -10,13 +10,13 @@
 extern "C" {
 #endif
 
-#define MAX_DIRECTORY_NAME 32
-#define ENTRY_SIZE sizeof(struct Directory_entry)
-#define MAX_FILE_NAME 23
+#define MAX_DIRECTORY_NAME (int)32
+#define ENTRY_SIZE (int)sizeof(struct Directory_entry)
+#define MAX_FILE_NAME (int)23
 
-#define MAX_BLOCKS_PER_FILE BLOCK_SIZE/sizeof(int)
-#define MAX_FILE_SIZE MAX_BLOCKS_PER_FILE*BLOCK_SIZE
-#define MAX_DIRECTORY_ENTRIES (BLOCK_SIZE-MAX_DIRECTORY_NAME)/ENTRY_SIZE
+#define MAX_BLOCKS_PER_FILE (int)(BLOCK_SIZE/sizeof(int))
+#define MAX_FILE_SIZE (int)(MAX_BLOCKS_PER_FILE*BLOCK_SIZE)
+#define MAX_DIRECTORY_ENTRIES (int)((BLOCK_SIZE-MAX_DIRECTORY_NAME)/ENTRY_SIZE)
 
 struct Directory_entry
 {
@@ -45,8 +45,9 @@ void filesystem_load_root();
 void filesystem_update_root();
 struct Directory* filesystem_load_directory(int n);
 
-void filesystem_init(struct fuse_conn_info *conn);
+void* filesystem_init(struct fuse_conn_info *conn);
 struct Directory_entry *filesystem_get_entry(const char *name);
+void filesystem_get_file_size(struct Directory_entry*, int *size, int *blocks);
 int filesystem_getattr(const char *path, struct stat *statbuf);
 int filesystem_mkdir(const char *path, mode_t mode);
 int filesystem_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
