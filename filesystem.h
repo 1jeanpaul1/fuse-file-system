@@ -44,6 +44,7 @@ void filesystem_update_map();
 void filesystem_load_root();
 void filesystem_update_root();
 struct Directory* filesystem_load_directory(int n);
+void filesystem_free_blocks(struct Directory_entry *entry);
 
 void* filesystem_init(struct fuse_conn_info *conn);
 struct Directory_entry *filesystem_get_entry(const char *name);
@@ -55,6 +56,7 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev);
 int filesystem_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo);
 int filesystem_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) ;
 int filesystem_rename(const char *path, const char *newpath);
+int filesystem_unlink(const char *path);
 
 #ifdef __cplusplus
 }

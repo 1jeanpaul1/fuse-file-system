@@ -115,6 +115,29 @@ struct Directory* filesystem_load_directory(int n)
     return directory;
 }
 
+void filesystem_free_blocks(struct Directory_entry *entry)
+{
+    unsigned char *char_index=(unsigned char*)calloc(1, sizeof(struct Index_block));
+    device_read_block(char_index, entry->index_block);
+
+    struct Index_block *index_block=(struct Index_block *)calloc(1, sizeof(struct Index_block));
+
+    memcpy(index_block, &char_index[0], sizeof(*index_block));
+    free(char_index);
+
+    int i;
+    for(i=0; i<MAX_BLOCKS_PER_FILE; i++)
+    {
+        if(index_block->blocks[i]!=0)
+        {
+            filesystem_set_bit(index_block->blocks[i], 1);
+        }
+    }
+    filesystem_set_bit(entry->index_block, 1);
+
+    filesystem_update_map();
+}
+
 void* filesystem_init(struct fuse_conn_info *conn) 
 {
     printf("%s\n", __FUNCTION__);
@@ -481,6 +504,7 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
             new_block=filesystem_get_free_block();
             filesystem_set_bit(new_block, 0);
             index_block->blocks[i]=new_block;
+            filesystem_update_map();
 
             char_index=(unsigned char*)calloc(1, sizeof(*index_block));
             memcpy(&char_index[0], index_block, sizeof(*index_block));
@@ -493,6 +517,7 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
         new_block=filesystem_get_free_block();
         filesystem_set_bit(new_block, 0);
         index_block->blocks[i]=new_block;
+        filesystem_update_map();
 
         char_index=(unsigned char*)calloc(1, sizeof(*index_block));
         memcpy(&char_index[0], index_block, sizeof(*index_block));
@@ -610,6 +635,78 @@ int filesystem_rename(const char *path, const char *newpath)
                 if(strcmp(file_name, directory->entries[i].name)==0)
                 {
                     strcpy(directory->entries[i].name, &newpath[name_start]);
+
+                    unsigned char *char_directory=(unsigned char*)calloc(1, sizeof(*directory));
+                    memcpy(&char_directory[0], directory, sizeof(*directory));
+                    device_write_block(char_directory, entry->index_block);
+                    free(char_directory);
+
+                    return 0;
+                }
+            }   
+            i++;
+        }
+        return -ENOENT;
+    }
+    return -ENOENT;
+}
+
+int filesystem_unlink(const char *path)
+{
+printf("%s\n", __FUNCTION__);
+
+    int i;
+    int in_root=1;
+    for(i=1; i<MAX_DIRECTORY_NAME; i++)
+    {
+        if(path[i]=='/')
+        {
+            in_root=0;
+            break;
+        }
+    }
+
+    if(in_root)
+    {
+        struct Directory_entry* entry=filesystem_get_entry(&path[0]);
+
+        if(entry==NULL)
+        {
+            return -ENOENT;
+        }
+
+        filesystem_free_blocks(entry);
+        entry->index_block=0;
+
+        filesystem_update_root();
+        return 0;
+    }
+    else
+    {
+        char directory_name[MAX_DIRECTORY_NAME];
+        memcpy(&directory_name, &path[0], i);
+        directory_name[i]=0;
+        struct Directory_entry* entry=filesystem_get_entry(&directory_name[0]);
+
+        if(entry==NULL)
+        {
+            return -ENOENT;;
+        }
+
+        struct Directory *directory=filesystem_load_directory(entry->index_block);
+
+        char file_name[MAX_DIRECTORY_NAME];
+        strcpy(file_name, &path[i+1]);
+
+        i=0;
+        while(i<MAX_DIRECTORY_ENTRIES)
+        {    
+            if(directory->entries[i].index_block!=0)
+            {
+                if(strcmp(file_name, directory->entries[i].name)==0)
+                {
+                    filesystem_free_blocks(&directory->entries[i]);
+                    directory->entries[i].index_block=0;
 
                     unsigned char *char_directory=(unsigned char*)calloc(1, sizeof(*directory));
                     memcpy(&char_directory[0], directory, sizeof(*directory));

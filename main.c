@@ -9,7 +9,8 @@ static struct fuse_operations operations={
     .mknod=filesystem_mknod,
     .write=filesystem_write,
     .read=filesystem_read,
-    .rename=filesystem_rename
+    .rename=filesystem_rename,
+    .unlink=filesystem_unlink
 };
 
 int main(int argc, char *argv[])
