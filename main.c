@@ -5,7 +5,12 @@ static struct fuse_operations operations={
     .init=filesystem_init,
     .getattr=filesystem_getattr,
     .mkdir=filesystem_mkdir,
-    .readdir=filesystem_readdir
+    .readdir=filesystem_readdir,
+    .mknod=filesystem_mknod,
+    .write=filesystem_write,
+    .read=filesystem_read,
+    .rename=filesystem_rename,
+    .unlink=filesystem_unlink
 };
 
 int main(int argc, char *argv[])
@@ -24,4 +29,7 @@ int main(int argc, char *argv[])
     device_close();
 
 	return fuse_stat;
+
+    //TO DO
+    //free
 }

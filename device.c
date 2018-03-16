@@ -40,6 +40,11 @@ void device_new_disk(const char *path)
     struct Directory root;
     strcpy(root.name, "root");
 
+    for(i=0; i<MAX_DIRECTORY_ENTRIES; i++)
+    {
+        root.entries[i].index_block=0;
+    }
+
     unsigned char *char_root=(unsigned char*)calloc(1, sizeof(root));
     memcpy(&char_root[0], &root, sizeof(root));
     device_write_block(char_root, 4);
