@@ -153,7 +153,7 @@ struct Directory_entry *filesystem_get_entry(const char *name)
 
     int i;
     int in_root=1;
-    for(i=1; i<=MAX_DIRECTORY_NAME+1; i++)
+    for(i=1; i<MAX_DIRECTORY_NAME; i++)
     {
         if(name[i]=='/')
         {
@@ -379,7 +379,7 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
 
         int i;
         int in_root=1;
-        for(i=1; i<=MAX_DIRECTORY_NAME+1; i++)
+        for(i=1; i<MAX_DIRECTORY_NAME; i++)
         {
             if(path[i]=='/')
             {
@@ -434,6 +434,7 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
         directory->entries[j].isDir=0;
         directory->entries[j].index_block=filesystem_get_free_block();
         filesystem_set_bit(directory->entries[j].index_block, 0);
+        filesystem_update_map();
 
         struct Index_block index_block;
         
@@ -443,7 +444,6 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
             index_block.blocks[x]=0;
         }
 
-        filesystem_update_map();
 
         unsigned char *char_directory=(unsigned char*)calloc(1, sizeof(*directory));
         memcpy(&char_directory[0], directory, sizeof(*directory));
@@ -653,7 +653,7 @@ int filesystem_rename(const char *path, const char *newpath)
 
 int filesystem_unlink(const char *path)
 {
-printf("%s\n", __FUNCTION__);
+    printf("%s\n", __FUNCTION__);
 
     int i;
     int in_root=1;
@@ -721,4 +721,35 @@ printf("%s\n", __FUNCTION__);
         return -ENOENT;
     }
     return -ENOENT;
+}
+
+int filesystem_rmdir(const char *path) 
+{
+    printf("%s\n", __FUNCTION__);
+
+    struct Directory_entry* entry=filesystem_get_entry(&path[0]);
+
+    if(entry==NULL)
+    {
+        return -ENOENT;;
+    }
+
+    struct Directory *directory=filesystem_load_directory(entry->index_block);
+
+    int i;
+    for(i=0; i<MAX_DIRECTORY_ENTRIES; i++)
+    {
+        if(directory->entries[i].index_block!=0)
+        {
+            filesystem_free_blocks(&directory->entries[i]);
+        }
+    }
+
+    filesystem_set_bit(entry->index_block, 1);
+    entry->index_block=0;
+
+    filesystem_update_root();
+    filesystem_update_map();
+
+    return 0;
 }

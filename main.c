@@ -10,7 +10,8 @@ static struct fuse_operations operations={
     .write=filesystem_write,
     .read=filesystem_read,
     .rename=filesystem_rename,
-    .unlink=filesystem_unlink
+    .unlink=filesystem_unlink,
+    .rmdir=filesystem_rmdir
 };
 
 int main(int argc, char *argv[])

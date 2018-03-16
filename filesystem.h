@@ -57,6 +57,7 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
 int filesystem_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) ;
 int filesystem_rename(const char *path, const char *newpath);
 int filesystem_unlink(const char *path);
+int filesystem_rmdir(const char *path);
 
 #ifdef __cplusplus
 }
