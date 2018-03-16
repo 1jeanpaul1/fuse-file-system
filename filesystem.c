@@ -46,7 +46,7 @@ int filesystem_get_free_block()
 
 void filesystem_load_map()
 {
-     printf("%s\n", __FUNCTION__);
+    printf("%s\n", __FUNCTION__);
     unsigned char *char_map=(unsigned char*)calloc(1, BLOCK_SIZE*sizeof(uint32_t));
     unsigned char *char_map_start=char_map;
     device_read_block(char_map, 0);
@@ -135,6 +135,8 @@ void filesystem_free_blocks(struct Directory_entry *entry)
     }
     filesystem_set_bit(entry->index_block, 1);
 
+    free(index_block);
+
     filesystem_update_map();
 }
 
@@ -162,21 +164,18 @@ struct Directory_entry *filesystem_get_entry(const char *name)
         }
     }
 
-    if(in_root)
-    {
-        i=0;
-    }
-
     struct Directory *directory;
     if(in_root)
     {
         directory=&root;
+        i=0;
     }
     else
     {
         char directory_name[MAX_DIRECTORY_NAME];
+        memset(directory_name, '\0', MAX_DIRECTORY_NAME);
+
         memcpy(&directory_name, &name[0], i);
-        directory_name[i]=0;
         struct Directory_entry* entry=filesystem_get_entry(&directory_name[0]);
 
         if(entry==NULL)
@@ -188,6 +187,7 @@ struct Directory_entry *filesystem_get_entry(const char *name)
     }
 
     char file_name[MAX_DIRECTORY_NAME];
+    memset(file_name, '\0', MAX_DIRECTORY_NAME);    
     strcpy(file_name, &name[i+1]);
 
     i=0;
@@ -234,6 +234,7 @@ void filesystem_get_file_size(struct Directory_entry* entry, int *size, int *blo
     (*size)+=strlen(block_info);
 
     free(block_info);
+    free(index_block);
 }
 
 int filesystem_getattr(const char *path, struct stat *statbuf)
@@ -403,6 +404,7 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
         else
         {
             char name[MAX_DIRECTORY_NAME];
+            memset(name, '\0', MAX_DIRECTORY_NAME);
             memcpy(&name, &path[0], i);
             entry=filesystem_get_entry(&name[0]);
 
@@ -525,7 +527,7 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
         free(char_index);
     }
 
-    unsigned char *char_info=(unsigned char*)calloc(1, sizeof(BLOCK_SIZE));
+    unsigned char *char_info=(unsigned char*)calloc(1, BLOCK_SIZE);
         
     if(!new_block)
     {
@@ -536,7 +538,7 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
     device_write_block(char_info,  index_block->blocks[i]);
 
     free(char_info);
-
+    free(index_block);
     return size;
 }
 
@@ -573,10 +575,13 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
             free(block_info);
         }
     }
+    int info_size=strlen(info);
+    memcpy(buf, &info[0], info_size);
 
-    memcpy(buf, &info[0], strlen(info));
+    free(info);
+    free(index_block);
 
-    return strlen(info);
+    return info_size;
 }
 
 int filesystem_rename(const char *path, const char *newpath)
@@ -611,8 +616,8 @@ int filesystem_rename(const char *path, const char *newpath)
     else
     {
         char directory_name[MAX_DIRECTORY_NAME];
+        memset(directory_name, '\0', MAX_DIRECTORY_NAME);
         memcpy(&directory_name, &path[0], i);
-        directory_name[i]=0;
         struct Directory_entry* entry=filesystem_get_entry(&directory_name[0]);
 
         if(entry==NULL)
@@ -623,6 +628,7 @@ int filesystem_rename(const char *path, const char *newpath)
         struct Directory *directory=filesystem_load_directory(entry->index_block);
 
         char file_name[MAX_DIRECTORY_NAME];
+        memset(file_name, '\0', MAX_DIRECTORY_NAME);
         strcpy(file_name, &path[i+1]);
 
         int name_start=i+1;
@@ -684,8 +690,8 @@ int filesystem_unlink(const char *path)
     else
     {
         char directory_name[MAX_DIRECTORY_NAME];
+        memset(directory_name, '\0', MAX_DIRECTORY_NAME);
         memcpy(&directory_name, &path[0], i);
-        directory_name[i]=0;
         struct Directory_entry* entry=filesystem_get_entry(&directory_name[0]);
 
         if(entry==NULL)
@@ -696,6 +702,7 @@ int filesystem_unlink(const char *path)
         struct Directory *directory=filesystem_load_directory(entry->index_block);
 
         char file_name[MAX_DIRECTORY_NAME];
+        memset(file_name, '\0', MAX_DIRECTORY_NAME);
         strcpy(file_name, &path[i+1]);
 
         i=0;
