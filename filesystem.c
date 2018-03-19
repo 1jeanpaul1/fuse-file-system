@@ -490,7 +490,6 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
             break;
         }
     }
-    //TO DO
 
     if(i!=0)
     {
@@ -558,7 +557,7 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
         return -ENOENT;
     }
 
-    char *info=(char *)calloc(1, MAX_FILE_SIZE);
+    char *info=(char *)calloc(1, (int)size+1);
 
     unsigned char *char_index=(unsigned char*)calloc(1, sizeof(struct Index_block));
     device_read_block(char_index, entry->index_block);
@@ -568,13 +567,16 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
     memcpy(index_block, &char_index[0], sizeof(*index_block));
     free(char_index);
 
+    int start_block=((int)offset)/BLOCK_SIZE;
+    int blocks_to_read=((int)size)/BLOCK_SIZE;
     int x;
-    for(x=0; x<MAX_BLOCKS_PER_FILE; x++)
+
+    for(x=0; x<blocks_to_read; x++)
     {
-        if(index_block->blocks[x]!=0)
+        if(index_block->blocks[x+start_block]!=0)
         {
             char *block_info=(char *)calloc(1, BLOCK_SIZE);
-            device_read_block((unsigned char*) block_info, index_block->blocks[x]);
+            device_read_block((unsigned char*) block_info, index_block->blocks[x+start_block]);
 
             strcat(info, block_info);
             free(block_info);
