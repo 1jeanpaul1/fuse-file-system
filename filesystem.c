@@ -534,6 +534,11 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
         device_read_block(char_info, index_block->blocks[i]);
     }
 
+    if((int)offset>=(BLOCK_SIZE*i))
+    {
+        offset=(off_t)(((int)offset)-(BLOCK_SIZE*i));
+    }
+
     memcpy(&char_info[offset], buf, size);
     device_write_block(char_info,  index_block->blocks[i]);
 
