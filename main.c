@@ -1,5 +1,6 @@
 #include "filesystem.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 static struct fuse_operations operations={
     .init=filesystem_init,
@@ -18,8 +19,19 @@ int main(int argc, char *argv[])
 {
     device_open(argv[1]);
 
-    int i=1;
-    for(; i < argc; i++)
+    int i;
+    for(i=1; i < argc; i++)
+    {
+		argv[i] = argv[i+1];
+	}
+	argc--;
+
+    if(atoi(argv[1]))
+    {
+        device_format();
+    }
+
+    for(i=1; i < argc; i++)
     {
 		argv[i] = argv[i+1];
 	}
