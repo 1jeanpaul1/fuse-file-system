@@ -10,9 +10,13 @@
 extern "C" {
 #endif
 
+#define DEBUG 0
+
+#define MY_NULL 'r'
+
 #define MAX_DIRECTORY_NAME (int)32
 #define ENTRY_SIZE (int)sizeof(struct Directory_entry)
-#define MAX_FILE_NAME (int)23
+#define MAX_FILE_NAME (int)24
 
 #define MAX_BLOCKS_PER_FILE (int)(BLOCK_SIZE/sizeof(int))
 #define MAX_FILE_SIZE (int)(MAX_BLOCKS_PER_FILE*BLOCK_SIZE)
@@ -38,6 +42,7 @@ struct Index_block
 
 void filesystem_set_bit(int n, int value);
 int filesystem_get_free_block();
+int filesystem_count_free_blocks();
 
 void filesystem_load_map();
 void filesystem_update_map();
@@ -58,6 +63,8 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
 int filesystem_rename(const char *path, const char *newpath);
 int filesystem_unlink(const char *path);
 int filesystem_rmdir(const char *path);
+
+int filesystem_statfs(const char *path, struct statvfs *statInfo);
 
 #ifdef __cplusplus
 }

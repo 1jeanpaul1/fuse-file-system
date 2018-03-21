@@ -12,7 +12,8 @@ static struct fuse_operations operations={
     .read=filesystem_read,
     .rename=filesystem_rename,
     .unlink=filesystem_unlink,
-    .rmdir=filesystem_rmdir
+    .rmdir=filesystem_rmdir,
+    .statfs=filesystem_statfs
 };
 
 int main(int argc, char *argv[])
