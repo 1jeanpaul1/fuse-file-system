@@ -26,11 +26,11 @@ void device_new_disk(const char *path)
     memcpy(&char_map[0], empty_blocks, BLOCK_SIZE*sizeof(uint32_t));
 
     device_write_block(char_map, 0);
-    char_map+=1023;
+    char_map+=4096;
     device_write_block(char_map, 1);
-    char_map+=1023;
+    char_map+=4096;
 	device_write_block(char_map, 2);
-    char_map+=1023;
+    char_map+=4096;
     device_write_block(char_map, 3);
     
     char_map=char_map_start;
@@ -106,11 +106,11 @@ void device_format()
     memcpy(&char_map[0], empty_blocks, BLOCK_SIZE*sizeof(uint32_t));
 
     device_write_block(char_map, 0);
-    char_map+=1023;
+    char_map+=4096;
     device_write_block(char_map, 1);
-    char_map+=1023;
+    char_map+=4096;
 	device_write_block(char_map, 2);
-    char_map+=1023;
+    char_map+=4096;
     device_write_block(char_map, 3);
     
     char_map=char_map_start;

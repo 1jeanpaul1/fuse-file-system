@@ -42,6 +42,7 @@ struct Index_block
 
 void filesystem_set_bit(int n, int value);
 int filesystem_get_free_block();
+int filesystem_count_free_blocks();
 
 void filesystem_load_map();
 void filesystem_update_map();

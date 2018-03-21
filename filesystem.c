@@ -47,6 +47,27 @@ int filesystem_get_free_block()
     return BITS_PER_WORD*i+j;
 }
 
+int filesystem_count_free_blocks()
+{
+    if(DEBUG) printf("%s\n", __FUNCTION__);
+    
+    int count=0;
+    int i;
+    for(i=0; i<BLOCK_SIZE; i++)
+    {
+        int j;
+        for(j=0; j<BITS_PER_WORD; j++)
+        {
+            if(CHECK_BIT(map[i], j))
+            {
+                count++;
+            }
+        }
+    }
+
+    return count;
+}
+
 void filesystem_load_map()
 {
     if(DEBUG) printf("%s\n", __FUNCTION__);
@@ -54,12 +75,13 @@ void filesystem_load_map()
     unsigned char *char_map=(unsigned char*)calloc(1, BLOCK_SIZE*sizeof(uint32_t));
     unsigned char *char_map_start=char_map;
     device_read_block(char_map, 0);
-    char_map+=1023;
+    char_map+=4096;
     device_read_block(char_map, 1);
-    char_map+=1023;    
+    char_map+=4096;    
     device_read_block(char_map, 2);
-    char_map+=1023;
+    char_map+=4096;
     device_read_block(char_map, 3);
+    
     char_map=char_map_start;
     memcpy(map, &char_map[0], BLOCK_SIZE*sizeof(uint32_t));
     free(char_map);
@@ -74,11 +96,11 @@ void filesystem_update_map()
     memcpy(&char_map[0], map, BLOCK_SIZE*sizeof(uint32_t));
 
     device_write_block(char_map, 0);
-    char_map+=1023;
+    char_map+=4096;
     device_write_block(char_map, 1);
-    char_map+=1023;
+    char_map+=4096;
 	device_write_block(char_map, 2);
-    char_map+=1023;
+    char_map+=4096;
     device_write_block(char_map, 3);
 
     char_map=char_map_start;
@@ -786,6 +808,12 @@ int filesystem_statfs(const char *path, struct statvfs *statInfo)
 	if(DEBUG) printf("%s\n", __FUNCTION__);
         
     statInfo->f_bsize=BLOCK_SIZE;
+
+    int free_blocks=filesystem_count_free_blocks();
+
+    statInfo->f_bfree=free_blocks;
+    statInfo->f_bavail=free_blocks;
+
     statInfo->f_namemax=MAX_FILE_NAME;
     
     return 0;
