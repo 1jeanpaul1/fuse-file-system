@@ -15,7 +15,8 @@ struct Directory root;
 
 void filesystem_set_bit(int n, int value)
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
+
     if(value)
     {
         map[WORD_OFFSET(n)]|=(1<<BIT_OFFSET(n));
@@ -28,7 +29,8 @@ void filesystem_set_bit(int n, int value)
 
 int filesystem_get_free_block()
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
+
     int i=0;
     while(map[i]==0 && i<BLOCK_SIZE)
     {
@@ -47,7 +49,8 @@ int filesystem_get_free_block()
 
 void filesystem_load_map()
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
+
     unsigned char *char_map=(unsigned char*)calloc(1, BLOCK_SIZE*sizeof(uint32_t));
     unsigned char *char_map_start=char_map;
     device_read_block(char_map, 0);
@@ -64,7 +67,8 @@ void filesystem_load_map()
 
 void filesystem_update_map()
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
+
     unsigned char *char_map=(unsigned char*)calloc(1, BLOCK_SIZE*sizeof(uint32_t));
     unsigned char *char_map_start=char_map;
     memcpy(&char_map[0], map, BLOCK_SIZE*sizeof(uint32_t));
@@ -83,7 +87,7 @@ void filesystem_update_map()
 
 void filesystem_load_root()
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
     
     unsigned char *char_root=(unsigned char*)calloc(1, sizeof(root));
     device_read_block(char_root, 4);
@@ -93,7 +97,7 @@ void filesystem_load_root()
 
 void filesystem_update_root()
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
     
     unsigned char *char_root=(unsigned char*)calloc(1, sizeof(root));
     memcpy(&char_root[0], &root, sizeof(root));
@@ -103,7 +107,7 @@ void filesystem_update_root()
 
 struct Directory* filesystem_load_directory(int n)
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
     
     unsigned char *char_directory=(unsigned char*)calloc(1, sizeof(struct Directory));
     device_read_block(char_directory, n);
@@ -118,6 +122,8 @@ struct Directory* filesystem_load_directory(int n)
 
 void filesystem_free_blocks(struct Directory_entry *entry)
 {
+    if(DEBUG) printf("%s\n", __FUNCTION__);
+
     unsigned char *char_index=(unsigned char*)calloc(1, sizeof(struct Index_block));
     device_read_block(char_index, entry->index_block);
 
@@ -143,7 +149,8 @@ void filesystem_free_blocks(struct Directory_entry *entry)
 
 void* filesystem_init(struct fuse_conn_info *conn) 
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
+
     filesystem_load_map();
     filesystem_load_root();
 
@@ -152,7 +159,7 @@ void* filesystem_init(struct fuse_conn_info *conn)
 
 struct Directory_entry *filesystem_get_entry(const char *name)
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
 
     int i;
     int in_root=1;
@@ -208,6 +215,8 @@ struct Directory_entry *filesystem_get_entry(const char *name)
 
 void filesystem_get_file_size(struct Directory_entry* entry, int *size, int *blocks)
 {
+    if(DEBUG) printf("%s\n", __FUNCTION__);
+
     *blocks=0;
     *size=0;
 
@@ -232,7 +241,17 @@ void filesystem_get_file_size(struct Directory_entry* entry, int *size, int *blo
 
     char *block_info=(char *)calloc(1, BLOCK_SIZE);
     device_read_block((unsigned char*) block_info, index_block->blocks[i]);
-    (*size)+=strlen(block_info);
+
+    int my_strlen=BLOCK_SIZE;
+    for(i=BLOCK_SIZE-1; i>=0; i--)
+    {
+        if(block_info[i]!=MY_NULL)
+        {
+            break;
+        }
+        my_strlen--;
+    }
+    (*size)+=my_strlen;
 
     free(block_info);
     free(index_block);
@@ -240,7 +259,8 @@ void filesystem_get_file_size(struct Directory_entry* entry, int *size, int *blo
 
 int filesystem_getattr(const char *path, struct stat *statbuf)
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
+
     if (strcmp(path, "/")==0)
     {
         statbuf->st_mode=S_IFDIR|0777;
@@ -291,7 +311,7 @@ int filesystem_getattr(const char *path, struct stat *statbuf)
 
 int filesystem_mkdir(const char *path, mode_t mode) 
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
     
     int i=0;
     while(i<MAX_DIRECTORY_ENTRIES)
@@ -331,7 +351,7 @@ int filesystem_mkdir(const char *path, mode_t mode)
 
 int filesystem_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
     
     struct Directory directory;
     if(strcmp(path, "/")== 0)
@@ -368,7 +388,7 @@ int filesystem_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, o
 
 int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
 
     if( S_ISREG(mode)) 
     {
@@ -465,7 +485,7 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
 
 int filesystem_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo)
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
 
     struct Directory_entry* entry=filesystem_get_entry(&path[0]);
    
@@ -491,17 +511,19 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
     {
         if(index_block->blocks[x+start_block]!=0)
         {
-            char *block_info=(char *)calloc(1, BLOCK_SIZE);
-            device_read_block((unsigned char*) block_info, index_block->blocks[x+start_block]);
+            unsigned char *block_info=(unsigned char*)calloc(1, BLOCK_SIZE);
+            memset(block_info, MY_NULL, BLOCK_SIZE);
+            
+            device_read_block(block_info, index_block->blocks[x+start_block]);
 
             int my_offset=(int)offset;
-            if(my_offset>=(BLOCK_SIZE*x))
+            if(my_offset>=(BLOCK_SIZE*(x+start_block)))
             {
-                my_offset-=(BLOCK_SIZE*x);
+                my_offset-=(BLOCK_SIZE*(x+start_block));
             }
 
             memcpy(&block_info[my_offset], buf, size);
-            device_write_block((unsigned char *)block_info,  index_block->blocks[x+start_block]);
+            device_write_block(block_info,  index_block->blocks[x+start_block]);
 
             free(block_info);
         }
@@ -517,14 +539,10 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
             device_write_block(char_index, entry->index_block);
             free(char_index);
 
-            int my_offset=(int)offset;
-            if(my_offset>=(BLOCK_SIZE*(x+start_block)))
-            {
-                my_offset-=(BLOCK_SIZE*(x+start_block));
-            }
-
             unsigned char *block_info=(unsigned char *)calloc(1, BLOCK_SIZE);
-            memcpy(&block_info[my_offset], buf, size);
+            memset(block_info, MY_NULL, BLOCK_SIZE);
+
+            memcpy(block_info, buf, size);
             device_write_block(block_info,  index_block->blocks[x+start_block]);
 
             free(block_info);
@@ -537,7 +555,7 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
 
 int filesystem_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo)
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
 
     struct Directory_entry* entry=filesystem_get_entry(&path[0]);
 
@@ -546,7 +564,7 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
         return -ENOENT;
     }
 
-    char *info=(char *)calloc(1, (int)size+1);
+    unsigned char *info=(unsigned char*)calloc(1, (int)size);
 
     unsigned char *char_index=(unsigned char*)calloc(1, sizeof(struct Index_block));
     device_read_block(char_index, entry->index_block);
@@ -560,29 +578,34 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
     int blocks_to_read=ceil(((double)size)/BLOCK_SIZE);
     int x;
 
+    int my_offset=0;
     for(x=0; x<blocks_to_read; x++)
     {
         if(index_block->blocks[x+start_block]!=0)
         {
-            char *block_info=(char *)calloc(1, BLOCK_SIZE);
-            device_read_block((unsigned char*) block_info, index_block->blocks[x+start_block]);
+            unsigned char *block_info=(unsigned char*)calloc(1, BLOCK_SIZE);
+            device_read_block(block_info, index_block->blocks[x+start_block]);
 
-            strcat(info, block_info);
+            memcpy(&info[my_offset], block_info, BLOCK_SIZE);
+
+            my_offset+=BLOCK_SIZE;
+
             free(block_info);
         }
     }
-    int info_size=strlen(info);
-    memcpy(buf, &info[0], info_size);
+    
+    memcpy(buf, info, size);
 
     free(info);
     free(index_block);
 
-    return info_size;
+    return size;
 }
 
 int filesystem_rename(const char *path, const char *newpath)
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
+
     filesystem_unlink(newpath);
 
     int i;
@@ -656,7 +679,7 @@ int filesystem_rename(const char *path, const char *newpath)
 
 int filesystem_unlink(const char *path)
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
 
     int i;
     int in_root=1;
@@ -729,7 +752,7 @@ int filesystem_unlink(const char *path)
 
 int filesystem_rmdir(const char *path) 
 {
-    printf("%s\n", __FUNCTION__);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
 
     struct Directory_entry* entry=filesystem_get_entry(&path[0]);
 
@@ -755,5 +778,15 @@ int filesystem_rmdir(const char *path)
     filesystem_update_root();
     filesystem_update_map();
 
+    return 0;
+}
+
+int filesystem_statfs(const char *path, struct statvfs *statInfo) 
+{
+	if(DEBUG) printf("%s\n", __FUNCTION__);
+        
+    statInfo->f_bsize=BLOCK_SIZE;
+    statInfo->f_namemax=MAX_FILE_NAME;
+    
     return 0;
 }
