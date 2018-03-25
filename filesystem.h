@@ -19,7 +19,7 @@ extern "C" {
 #define MAX_FILE_SIZE (int)(MAX_BLOCKS_PER_FILE*BLOCK_SIZE)
 #define MAX_DIRECTORY_ENTRIES (int)(BLOCK_SIZE/ENTRY_SIZE)
 
-int debug;
+extern int debug;
 
 struct Directory_entry
 {

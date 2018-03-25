@@ -12,6 +12,7 @@
 
 uint32_t map[BLOCK_SIZE];
 struct Directory root;
+int debug;
 
 void filesystem_set_bit(int n, int value)
 {
