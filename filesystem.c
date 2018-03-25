@@ -44,6 +44,10 @@ int filesystem_get_free_block()
         k--;
     }
 
+    if(!CHECK_BIT(map[i], j))
+    {
+        return -1;
+    }
     return BITS_PER_WORD*i+j;
 }
 
@@ -362,9 +366,16 @@ int filesystem_mkdir(const char *path, mode_t mode)
         i++;
     }
 
+    int free_block=filesystem_get_free_block();
+
+    if(root.entries[i].index_block!=0 || free_block==-1)
+    {
+        return -ENOSPC;
+    }
+
     strcpy(root.entries[i].name, &path[1]);
     root.entries[i].is_dir=1;
-    root.entries[i].index_block=filesystem_get_free_block();
+    root.entries[i].index_block=free_block;
     filesystem_set_bit(root.entries[i].index_block, 0);
 
     struct Directory directory;
@@ -482,7 +493,9 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
             j++;
         }
 
-        if(directory->entries[j].index_block!=0)
+        int free_block=filesystem_get_free_block();
+
+        if(directory->entries[j].index_block!=0 || free_block==-1)
         {
             return -ENOSPC;
         }
@@ -494,7 +507,7 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
 
         strcpy(directory->entries[j].name, &path[i+1]);
         directory->entries[j].is_dir=0;
-        directory->entries[j].index_block=filesystem_get_free_block();
+        directory->entries[j].index_block=free_block;
         filesystem_set_bit(directory->entries[j].index_block, 0);
         filesystem_update_map();
 
@@ -568,6 +581,12 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
         else
         {
             int new_block=filesystem_get_free_block();
+
+            if(new_block==-1)
+            {
+                return -ENOSPC;
+            }
+
             filesystem_set_bit(new_block, 0);
             filesystem_update_map();
             index_block->blocks[x+start_block]=new_block;
