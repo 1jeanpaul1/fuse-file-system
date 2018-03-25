@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	}
 	argc--;
 
-	int fuse_stat=fuse_main(argc, argv, &operations, NULL);
+ 	int fuse_stat=fuse_main(argc, argv, &operations, NULL);
 
     device_close();
 
