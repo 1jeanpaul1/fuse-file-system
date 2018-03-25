@@ -181,7 +181,7 @@ void* filesystem_init(struct fuse_conn_info *conn)
 
 struct Directory_entry *filesystem_get_entry(const char *name)
 {
-    if(DEBUG) printf("%s: %s\n", __FUNCTION__, name);
+    if(DEBUG) printf("%s\n", __FUNCTION__);
 
     int i;
     int in_root=1;
@@ -261,21 +261,24 @@ void filesystem_get_file_size(struct Directory_entry* entry, int *size, int *blo
         (*size)+=BLOCK_SIZE;
     }
 
-    char *block_info=(char *)calloc(1, BLOCK_SIZE);
-    device_read_block((unsigned char*) block_info, index_block->blocks[i]);
-
-    int my_strlen=BLOCK_SIZE;
-    for(i=BLOCK_SIZE-1; i>=0; i--)
+    if((*blocks)>0) 
     {
-        if(block_info[i]!=MY_NULL)
-        {
-            break;
-        }
-        my_strlen--;
-    }
-    (*size)+=my_strlen;
+        char *block_info=(char *)calloc(1, BLOCK_SIZE);
+       device_read_block((unsigned char*) block_info, index_block->blocks[i]);
 
-    free(block_info);
+        int my_strlen=BLOCK_SIZE;
+        for(i=BLOCK_SIZE-1; i>=0; i--)
+        {
+            if(block_info[i]!=MY_NULL)
+            {
+                break;
+            }
+            my_strlen--;
+        }
+        (*size)+=my_strlen;
+
+        free(block_info);
+    }
     free(index_block);
 }
 
@@ -304,7 +307,7 @@ int filesystem_getattr(const char *path, struct stat *statbuf)
         
         if(entry->is_dir)
         {
-            statbuf->st_mode=S_IFDIR | 0777;
+            statbuf->st_mode=S_IFDIR|0777;
             statbuf->st_uid=0;
             statbuf->st_gid=0;
             statbuf->st_nlink=1;
@@ -318,7 +321,7 @@ int filesystem_getattr(const char *path, struct stat *statbuf)
             int size, blocks;
             filesystem_get_file_size(entry, &size, &blocks);
 
-            statbuf->st_mode=S_IFREG | 0777;
+            statbuf->st_mode=S_IFREG|0777;
             statbuf->st_nlink=1;
             statbuf->st_ino=0;
             statbuf->st_uid=0;
@@ -425,7 +428,7 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
 {
     if(DEBUG) printf("%s\n", __FUNCTION__);
 
-    if( S_ISREG(mode)) 
+    if(S_ISREG(mode)) 
     {
         struct Directory_entry* entry=filesystem_get_entry(&path[0]);
 
