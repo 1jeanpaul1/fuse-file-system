@@ -44,6 +44,10 @@ int filesystem_get_free_block()
         k--;
     }
 
+    if(!CHECK_BIT(map[i], j))
+    {
+        return -1;
+    }
     return BITS_PER_WORD*i+j;
 }
 
@@ -185,7 +189,7 @@ struct Directory_entry *filesystem_get_entry(const char *name)
 
     int i;
     int in_root=1;
-    for(i=1; i<MAX_DIRECTORY_NAME; i++)
+    for(i=1; i<MAX_FILE_NAME+1; i++)
     {
         if(name[i]=='/')
         {
@@ -202,8 +206,8 @@ struct Directory_entry *filesystem_get_entry(const char *name)
     }
     else
     {
-        char directory_name[MAX_DIRECTORY_NAME];
-        memset(directory_name, '\0', MAX_DIRECTORY_NAME);
+        char directory_name[MAX_FILE_NAME+1];
+        memset(directory_name, '\0', MAX_FILE_NAME+1);
 
         memcpy(&directory_name, &name[0], i);
         struct Directory_entry* entry=filesystem_get_entry(&directory_name[0]);
@@ -216,8 +220,8 @@ struct Directory_entry *filesystem_get_entry(const char *name)
         directory=filesystem_load_directory(entry->index_block);
     }
 
-    char file_name[MAX_DIRECTORY_NAME];
-    memset(file_name, '\0', MAX_DIRECTORY_NAME);    
+    char file_name[MAX_FILE_NAME];
+    memset(file_name, '\0', MAX_FILE_NAME);    
     strcpy(file_name, &name[i+1]);
 
     i=0;
@@ -261,21 +265,24 @@ void filesystem_get_file_size(struct Directory_entry* entry, int *size, int *blo
         (*size)+=BLOCK_SIZE;
     }
 
-    char *block_info=(char *)calloc(1, BLOCK_SIZE);
-    device_read_block((unsigned char*) block_info, index_block->blocks[i]);
-
-    int my_strlen=BLOCK_SIZE;
-    for(i=BLOCK_SIZE-1; i>=0; i--)
+    if((*blocks)>0) 
     {
-        if(block_info[i]!=MY_NULL)
-        {
-            break;
-        }
-        my_strlen--;
-    }
-    (*size)+=my_strlen;
+        char *block_info=(char *)calloc(1, BLOCK_SIZE);
+       device_read_block((unsigned char*) block_info, index_block->blocks[i]);
 
-    free(block_info);
+        int my_strlen=BLOCK_SIZE;
+        for(i=BLOCK_SIZE-1; i>=0; i--)
+        {
+            if(block_info[i]!=MY_NULL)
+            {
+                break;
+            }
+            my_strlen--;
+        }
+        (*size)+=my_strlen;
+
+        free(block_info);
+    }
     free(index_block);
 }
 
@@ -302,9 +309,9 @@ int filesystem_getattr(const char *path, struct stat *statbuf)
             return -ENOENT;
         }
         
-        if(entry->isDir)
+        if(entry->is_dir)
         {
-            statbuf->st_mode=S_IFDIR | 0777;
+            statbuf->st_mode=S_IFDIR|0777;
             statbuf->st_uid=0;
             statbuf->st_gid=0;
             statbuf->st_nlink=1;
@@ -318,7 +325,7 @@ int filesystem_getattr(const char *path, struct stat *statbuf)
             int size, blocks;
             filesystem_get_file_size(entry, &size, &blocks);
 
-            statbuf->st_mode=S_IFREG | 0777;
+            statbuf->st_mode=S_IFREG|0777;
             statbuf->st_nlink=1;
             statbuf->st_ino=0;
             statbuf->st_uid=0;
@@ -334,8 +341,22 @@ int filesystem_getattr(const char *path, struct stat *statbuf)
 int filesystem_mkdir(const char *path, mode_t mode) 
 {
     if(DEBUG) printf("%s\n", __FUNCTION__);
+
+    if(strlen(&path[1])>=MAX_FILE_NAME)
+    {
+        return -ENAMETOOLONG;
+    }
+
+    int i;
+    for(i=1; i<(int)strlen(path); i++)
+    {
+        if(path[i]=='/')
+        {
+            return -EPERM;
+        }
+    }
     
-    int i=0;
+    i=0;
     while(i<MAX_DIRECTORY_ENTRIES)
     {    
         if(root.entries[i].index_block==0)
@@ -345,13 +366,19 @@ int filesystem_mkdir(const char *path, mode_t mode)
         i++;
     }
 
+    int free_block=filesystem_get_free_block();
+
+    if(root.entries[i].index_block!=0 || free_block==-1)
+    {
+        return -ENOSPC;
+    }
+
     strcpy(root.entries[i].name, &path[1]);
-    root.entries[i].isDir=1;
-    root.entries[i].index_block=filesystem_get_free_block();
+    root.entries[i].is_dir=1;
+    root.entries[i].index_block=free_block;
     filesystem_set_bit(root.entries[i].index_block, 0);
 
     struct Directory directory;
-    strcpy(directory.name, root.entries[i].name);
 
     int j;
     for(j=0; j<MAX_DIRECTORY_ENTRIES; j++)
@@ -376,7 +403,7 @@ int filesystem_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, o
     if(DEBUG) printf("%s\n", __FUNCTION__);
     
     struct Directory directory;
-    if(strcmp(path, "/")== 0)
+    if(strcmp(path, "/")==0)
 	{
         directory=root;
 	}
@@ -412,7 +439,7 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
 {
     if(DEBUG) printf("%s\n", __FUNCTION__);
 
-    if( S_ISREG(mode)) 
+    if(S_ISREG(mode)) 
     {
         struct Directory_entry* entry=filesystem_get_entry(&path[0]);
 
@@ -423,7 +450,7 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
 
         int i;
         int in_root=1;
-        for(i=1; i<MAX_DIRECTORY_NAME; i++)
+        for(i=1; i<MAX_FILE_NAME+1; i++)
         {
             if(path[i]=='/')
             {
@@ -432,24 +459,20 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
             }
         }
 
-        if(in_root)
-        {
-            i=0;
-        }
-
         int block;
         struct Directory *directory;
         if(in_root)
         {
             directory=&root;
+            i=0;
             block=4;
         }
         else
         {
-            char name[MAX_DIRECTORY_NAME];
-            memset(name, '\0', MAX_DIRECTORY_NAME);
-            memcpy(&name, &path[0], i);
-            entry=filesystem_get_entry(&name[0]);
+            char directory_name[MAX_FILE_NAME+1];
+            memset(directory_name, '\0', MAX_FILE_NAME+1);
+            memcpy(&directory_name, &path[0], i);
+            entry=filesystem_get_entry(&directory_name[0]);
 
             if(entry==NULL)
             {
@@ -470,14 +493,21 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
             j++;
         }
 
-        if(directory->entries[j].index_block!=0)
+        int free_block=filesystem_get_free_block();
+
+        if(directory->entries[j].index_block!=0 || free_block==-1)
         {
             return -ENOSPC;
         }
 
+        if(strlen(&path[i+1])>=MAX_FILE_NAME)
+        {
+            return -ENAMETOOLONG;
+        }
+
         strcpy(directory->entries[j].name, &path[i+1]);
-        directory->entries[j].isDir=0;
-        directory->entries[j].index_block=filesystem_get_free_block();
+        directory->entries[j].is_dir=0;
+        directory->entries[j].index_block=free_block;
         filesystem_set_bit(directory->entries[j].index_block, 0);
         filesystem_update_map();
 
@@ -488,7 +518,6 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
         {
             index_block.blocks[x]=0;
         }
-
 
         unsigned char *char_directory=(unsigned char*)calloc(1, sizeof(*directory));
         memcpy(&char_directory[0], directory, sizeof(*directory));
@@ -552,6 +581,12 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
         else
         {
             int new_block=filesystem_get_free_block();
+
+            if(new_block==-1)
+            {
+                return -ENOSPC;
+            }
+
             filesystem_set_bit(new_block, 0);
             filesystem_update_map();
             index_block->blocks[x+start_block]=new_block;
@@ -632,7 +667,7 @@ int filesystem_rename(const char *path, const char *newpath)
 
     int i;
     int in_root=1;
-    for(i=1; i<MAX_DIRECTORY_NAME; i++)
+    for(i=1; i<MAX_FILE_NAME+1; i++)
     {
         if(path[i]=='/')
         {
@@ -643,6 +678,11 @@ int filesystem_rename(const char *path, const char *newpath)
 
     if(in_root)
     {
+        if(strlen(&newpath[1])>=MAX_FILE_NAME)
+        {
+            return -ENAMETOOLONG;
+        }
+        
         struct Directory_entry* entry=filesystem_get_entry(&path[0]);
 
         if(entry==NULL)
@@ -657,9 +697,15 @@ int filesystem_rename(const char *path, const char *newpath)
     }
     else
     {
-        char directory_name[MAX_DIRECTORY_NAME];
-        memset(directory_name, '\0', MAX_DIRECTORY_NAME);
+        if(strlen(&newpath[i+1])>=MAX_FILE_NAME)
+        {
+            return -ENAMETOOLONG;
+        }
+
+        char directory_name[MAX_FILE_NAME+1];
+        memset(directory_name, '\0', MAX_FILE_NAME+1);
         memcpy(&directory_name, &path[0], i);
+
         struct Directory_entry* entry=filesystem_get_entry(&directory_name[0]);
 
         if(entry==NULL)
@@ -669,8 +715,8 @@ int filesystem_rename(const char *path, const char *newpath)
 
         struct Directory *directory=filesystem_load_directory(entry->index_block);
 
-        char file_name[MAX_DIRECTORY_NAME];
-        memset(file_name, '\0', MAX_DIRECTORY_NAME);
+        char file_name[MAX_FILE_NAME];
+        memset(file_name, '\0', MAX_FILE_NAME);
         strcpy(file_name, &path[i+1]);
 
         int name_start=i+1;
@@ -705,7 +751,7 @@ int filesystem_unlink(const char *path)
 
     int i;
     int in_root=1;
-    for(i=1; i<MAX_DIRECTORY_NAME; i++)
+    for(i=1; i<MAX_FILE_NAME+1; i++)
     {
         if(path[i]=='/')
         {
@@ -731,9 +777,10 @@ int filesystem_unlink(const char *path)
     }
     else
     {
-        char directory_name[MAX_DIRECTORY_NAME];
-        memset(directory_name, '\0', MAX_DIRECTORY_NAME);
+        char directory_name[MAX_FILE_NAME+1];
+        memset(directory_name, '\0', MAX_FILE_NAME+1);
         memcpy(&directory_name, &path[0], i);
+
         struct Directory_entry* entry=filesystem_get_entry(&directory_name[0]);
 
         if(entry==NULL)
@@ -743,8 +790,8 @@ int filesystem_unlink(const char *path)
 
         struct Directory *directory=filesystem_load_directory(entry->index_block);
 
-        char file_name[MAX_DIRECTORY_NAME];
-        memset(file_name, '\0', MAX_DIRECTORY_NAME);
+        char file_name[MAX_FILE_NAME];
+        memset(file_name, '\0', MAX_FILE_NAME);
         strcpy(file_name, &path[i+1]);
 
         i=0;
@@ -814,7 +861,7 @@ int filesystem_statfs(const char *path, struct statvfs *statInfo)
     statInfo->f_bfree=free_blocks;
     statInfo->f_bavail=free_blocks;
 
-    statInfo->f_namemax=MAX_FILE_NAME;
+    statInfo->f_namemax=MAX_FILE_NAME-1;
     
     return 0;
 }

@@ -14,24 +14,22 @@ extern "C" {
 
 #define MY_NULL 'r'
 
-#define MAX_DIRECTORY_NAME (int)32
 #define ENTRY_SIZE (int)sizeof(struct Directory_entry)
 #define MAX_FILE_NAME (int)24
 
 #define MAX_BLOCKS_PER_FILE (int)(BLOCK_SIZE/sizeof(int))
 #define MAX_FILE_SIZE (int)(MAX_BLOCKS_PER_FILE*BLOCK_SIZE)
-#define MAX_DIRECTORY_ENTRIES (int)((BLOCK_SIZE-MAX_DIRECTORY_NAME)/ENTRY_SIZE)
+#define MAX_DIRECTORY_ENTRIES (int)(BLOCK_SIZE/ENTRY_SIZE)
 
 struct Directory_entry
 {
     char name[MAX_FILE_NAME];
     int index_block;
-    char isDir;
+    char is_dir;
 };
 
 struct Directory 
 {
-    char name[MAX_DIRECTORY_NAME];
     struct Directory_entry entries[MAX_DIRECTORY_ENTRIES];
 };
 

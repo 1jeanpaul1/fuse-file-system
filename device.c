@@ -37,7 +37,6 @@ void device_new_disk(const char *path)
     free(char_map);
 
     struct Directory root;
-    strcpy(root.name, "root");
 
     for(i=0; i<MAX_DIRECTORY_ENTRIES; i++)
     {
@@ -117,8 +116,7 @@ void device_format()
     free(char_map);
 
     struct Directory root;
-    strcpy(root.name, "root");
-
+  
     for(i=0; i<MAX_DIRECTORY_ENTRIES; i++)
     {
         root.entries[i].index_block=0;
