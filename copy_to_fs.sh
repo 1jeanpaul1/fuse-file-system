@@ -1,3 +1,4 @@
 #!/bin/bash
 
-cp -r device/* "$1"
+mkdir "$1"/fuse_copy
+cp -r device/* "$1"/fuse_copy

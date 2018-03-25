@@ -10,8 +10,6 @@
 extern "C" {
 #endif
 
-#define DEBUG 0
-
 #define MY_NULL 'r'
 
 #define ENTRY_SIZE (int)sizeof(struct Directory_entry)
@@ -20,6 +18,8 @@ extern "C" {
 #define MAX_BLOCKS_PER_FILE (int)(BLOCK_SIZE/sizeof(int))
 #define MAX_FILE_SIZE (int)(MAX_BLOCKS_PER_FILE*BLOCK_SIZE)
 #define MAX_DIRECTORY_ENTRIES (int)(BLOCK_SIZE/ENTRY_SIZE)
+
+extern int debug;
 
 struct Directory_entry
 {
@@ -44,6 +44,7 @@ int filesystem_count_free_blocks();
 
 void filesystem_load_map();
 void filesystem_update_map();
+void filesystem_load_device_size();
 void filesystem_load_root();
 void filesystem_update_root();
 struct Directory* filesystem_load_directory(int n);

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-bin/filesystem devices/$1 1 device/ -f -s
+bin/filesystem devices/$1 1 0 $2 device/ -s
