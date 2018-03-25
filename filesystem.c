@@ -15,7 +15,7 @@ struct Directory root;
 
 void filesystem_set_bit(int n, int value)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     if(value)
     {
@@ -29,7 +29,7 @@ void filesystem_set_bit(int n, int value)
 
 int filesystem_get_free_block()
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     int i=0;
     while(map[i]==0 && i<BLOCK_SIZE)
@@ -53,7 +53,7 @@ int filesystem_get_free_block()
 
 int filesystem_count_free_blocks()
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
     
     int count=0;
     int i;
@@ -74,7 +74,7 @@ int filesystem_count_free_blocks()
 
 void filesystem_load_map()
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     unsigned char *char_map=(unsigned char*)calloc(1, BLOCK_SIZE*sizeof(uint32_t));
     unsigned char *char_map_start=char_map;
@@ -93,7 +93,7 @@ void filesystem_load_map()
 
 void filesystem_update_map()
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     unsigned char *char_map=(unsigned char*)calloc(1, BLOCK_SIZE*sizeof(uint32_t));
     unsigned char *char_map_start=char_map;
@@ -113,7 +113,7 @@ void filesystem_update_map()
 
 void filesystem_load_root()
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
     
     unsigned char *char_root=(unsigned char*)calloc(1, sizeof(root));
     device_read_block(char_root, 4);
@@ -123,7 +123,7 @@ void filesystem_load_root()
 
 void filesystem_update_root()
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
     
     unsigned char *char_root=(unsigned char*)calloc(1, sizeof(root));
     memcpy(&char_root[0], &root, sizeof(root));
@@ -133,7 +133,7 @@ void filesystem_update_root()
 
 struct Directory* filesystem_load_directory(int n)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
     
     unsigned char *char_directory=(unsigned char*)calloc(1, sizeof(struct Directory));
     device_read_block(char_directory, n);
@@ -148,7 +148,7 @@ struct Directory* filesystem_load_directory(int n)
 
 void filesystem_free_blocks(struct Directory_entry *entry)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     unsigned char *char_index=(unsigned char*)calloc(1, sizeof(struct Index_block));
     device_read_block(char_index, entry->index_block);
@@ -175,7 +175,7 @@ void filesystem_free_blocks(struct Directory_entry *entry)
 
 void* filesystem_init(struct fuse_conn_info *conn) 
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     filesystem_load_map();
     filesystem_load_root();
@@ -185,7 +185,7 @@ void* filesystem_init(struct fuse_conn_info *conn)
 
 struct Directory_entry *filesystem_get_entry(const char *name)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     int i;
     int in_root=1;
@@ -241,7 +241,7 @@ struct Directory_entry *filesystem_get_entry(const char *name)
 
 void filesystem_get_file_size(struct Directory_entry* entry, int *size, int *blocks)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     *blocks=0;
     *size=0;
@@ -288,7 +288,7 @@ void filesystem_get_file_size(struct Directory_entry* entry, int *size, int *blo
 
 int filesystem_getattr(const char *path, struct stat *statbuf)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     if (strcmp(path, "/")==0)
     {
@@ -340,7 +340,7 @@ int filesystem_getattr(const char *path, struct stat *statbuf)
 
 int filesystem_mkdir(const char *path, mode_t mode) 
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     if(strlen(&path[1])>=MAX_FILE_NAME)
     {
@@ -400,7 +400,7 @@ int filesystem_mkdir(const char *path, mode_t mode)
 
 int filesystem_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
     
     struct Directory directory;
     if(strcmp(path, "/")==0)
@@ -437,7 +437,7 @@ int filesystem_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, o
 
 int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     if(S_ISREG(mode)) 
     {
@@ -536,7 +536,7 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
 
 int filesystem_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     struct Directory_entry* entry=filesystem_get_entry(&path[0]);
    
@@ -612,7 +612,7 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
 
 int filesystem_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     struct Directory_entry* entry=filesystem_get_entry(&path[0]);
 
@@ -661,7 +661,7 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
 
 int filesystem_rename(const char *path, const char *newpath)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     filesystem_unlink(newpath);
 
@@ -747,7 +747,7 @@ int filesystem_rename(const char *path, const char *newpath)
 
 int filesystem_unlink(const char *path)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     int i;
     int in_root=1;
@@ -821,7 +821,7 @@ int filesystem_unlink(const char *path)
 
 int filesystem_rmdir(const char *path) 
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     struct Directory_entry* entry=filesystem_get_entry(&path[0]);
 
@@ -852,7 +852,7 @@ int filesystem_rmdir(const char *path)
 
 int filesystem_statfs(const char *path, struct statvfs *statInfo) 
 {
-	if(DEBUG) printf("%s\n", __FUNCTION__);
+	if(debug) printf("%s\n", __FUNCTION__);
         
     statInfo->f_bsize=BLOCK_SIZE;
 

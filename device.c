@@ -9,7 +9,7 @@ static FILE *f;
 
 void device_new_disk(const char *path)
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     f=fopen(path, "w+");
     
@@ -52,7 +52,7 @@ void device_new_disk(const char *path)
 
 void device_open(const char *path) 
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     f=fopen(path, "r+");
 	
@@ -64,7 +64,7 @@ void device_open(const char *path)
 
 void device_close()
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     fflush(f);
     fclose(f);
@@ -72,7 +72,7 @@ void device_close()
 
 int device_read_block(unsigned char buffer[], int block) 
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     fseek(f, block*BLOCK_SIZE, SEEK_SET);
 	
@@ -81,7 +81,7 @@ int device_read_block(unsigned char buffer[], int block)
 
 int device_write_block(unsigned char buffer[], int block) 
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     fseek(f, block*BLOCK_SIZE, SEEK_SET);
 	
@@ -90,7 +90,7 @@ int device_write_block(unsigned char buffer[], int block)
 
 void device_format()
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
 
     uint32_t empty_blocks[BLOCK_SIZE];
     int i;
@@ -131,7 +131,7 @@ void device_format()
 
 void device_flush()
 {
-    if(DEBUG) printf("%s\n", __FUNCTION__);
+    if(debug) printf("%s\n", __FUNCTION__);
     
     fflush(f);
 }

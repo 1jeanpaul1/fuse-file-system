@@ -21,9 +21,9 @@ int main(int argc, char *argv[])
     device_open(argv[1]);
 
     int i;
-    for(i=1; i < argc; i++)
+    for(i=1; i<argc; i++)
     {
-		argv[i] = argv[i+1];
+		argv[i]=argv[i+1];
 	}
 	argc--;
 
@@ -32,9 +32,17 @@ int main(int argc, char *argv[])
         device_format();
     }
 
-    for(i=1; i < argc; i++)
+    for(i=1; i<argc; i++)
     {
 		argv[i] = argv[i+1];
+	}
+	argc--;
+
+    debug=atoi(argv[1]);
+
+    for(i=1; i<argc; i++)
+    {
+		argv[i]=argv[i+1];
 	}
 	argc--;
 

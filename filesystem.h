@@ -10,8 +10,6 @@
 extern "C" {
 #endif
 
-#define DEBUG 0
-
 #define MY_NULL 'r'
 
 #define ENTRY_SIZE (int)sizeof(struct Directory_entry)
@@ -20,6 +18,8 @@ extern "C" {
 #define MAX_BLOCKS_PER_FILE (int)(BLOCK_SIZE/sizeof(int))
 #define MAX_FILE_SIZE (int)(MAX_BLOCKS_PER_FILE*BLOCK_SIZE)
 #define MAX_DIRECTORY_ENTRIES (int)(BLOCK_SIZE/ENTRY_SIZE)
+
+int debug;
 
 struct Directory_entry
 {
