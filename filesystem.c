@@ -13,6 +13,7 @@
 uint32_t map[BLOCK_SIZE];
 struct Directory root;
 int debug;
+int device_size;
 
 void filesystem_set_bit(int n, int value)
 {
@@ -45,7 +46,7 @@ int filesystem_get_free_block()
         k--;
     }
 
-    if(!CHECK_BIT(map[i], j))
+    if(!CHECK_BIT(map[i], j) || (BITS_PER_WORD*i+j)>=floor(device_size/BLOCK_SIZE))
     {
         return -1;
     }
@@ -63,6 +64,11 @@ int filesystem_count_free_blocks()
         int j;
         for(j=0; j<BITS_PER_WORD; j++)
         {
+            if((BITS_PER_WORD*i+j)>=floor(device_size/BLOCK_SIZE))
+            {
+                i=BLOCK_SIZE;
+                break;
+            }
             if(CHECK_BIT(map[i], j))
             {
                 count++;
@@ -110,6 +116,15 @@ void filesystem_update_map()
 
     char_map=char_map_start;
     free(char_map);
+}
+
+void filesystem_load_device_size()
+{
+    unsigned char *char_device_size=(unsigned char*)calloc(1, BLOCK_SIZE);
+    device_read_block(char_device_size, 5);
+    memcpy(&device_size, char_device_size, sizeof(device_size));
+
+    free(char_device_size);
 }
 
 void filesystem_load_root()
@@ -180,6 +195,7 @@ void* filesystem_init(struct fuse_conn_info *conn)
 
     filesystem_load_map();
     filesystem_load_root();
+    filesystem_load_device_size();
 
     return NULL;
 }

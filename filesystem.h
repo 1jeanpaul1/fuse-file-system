@@ -44,6 +44,7 @@ int filesystem_count_free_blocks();
 
 void filesystem_load_map();
 void filesystem_update_map();
+void filesystem_load_device_size();
 void filesystem_load_root();
 void filesystem_update_root();
 struct Directory* filesystem_load_directory(int n);

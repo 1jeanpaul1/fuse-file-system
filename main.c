@@ -18,18 +18,23 @@ static struct fuse_operations operations={
 
 int main(int argc, char *argv[])
 {
-    device_open(argv[1]);
+    debug=atoi(argv[3]);
 
-    int i;
-    for(i=1; i<argc; i++)
-    {
-		argv[i]=argv[i+1];
-	}
-	argc--;
+    device_open(argv[1], atoi(argv[4]));
 
-    if(atoi(argv[1]))
+    if(atoi(argv[2]))
     {
         device_format();
+    }
+
+    int i;
+    if(atoi(argv[4])!=0)
+    {
+        for(i=1; i<argc; i++)
+        {
+            argv[i]=argv[i+1];
+        }
+        argc--;
     }
 
     for(i=1; i<argc; i++)
@@ -38,7 +43,11 @@ int main(int argc, char *argv[])
 	}
 	argc--;
 
-    debug=atoi(argv[1]);
+    for(i=1; i<argc; i++)
+    {
+		argv[i]=argv[i+1];
+	}
+	argc--;
 
     for(i=1; i<argc; i++)
     {

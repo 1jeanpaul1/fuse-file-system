@@ -9,8 +9,8 @@ extern "C" {
 
 #define BLOCK_SIZE 4096
 
-void device_new_device(const char *path);
-void device_open(const char *path);
+void device_new_disk(const char *path, int device_size);
+void device_open(const char *path, int device_size);
 void device_close();
 int device_read_block(unsigned char buffer[], int block);
 int device_write_block(unsigned char buffer[], int block);
