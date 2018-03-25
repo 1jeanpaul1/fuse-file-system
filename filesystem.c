@@ -385,7 +385,7 @@ int filesystem_mkdir(const char *path, mode_t mode)
 
     int free_block=filesystem_get_free_block();
 
-    if(root.entries[i].index_block!=0 || free_block==-1)
+    if(i>=MAX_DIRECTORY_ENTRIES || free_block==-1)
     {
         return -ENOSPC;
     }
@@ -512,7 +512,7 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
 
         int free_block=filesystem_get_free_block();
 
-        if(directory->entries[j].index_block!=0 || free_block==-1)
+        if(j>=MAX_DIRECTORY_ENTRIES || free_block==-1)
         {
             return -ENOSPC;
         }
@@ -577,6 +577,10 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
 
     for(x=0; x<blocks_to_write; x++)
     {
+        if((x+start_block)>=MAX_BLOCKS_PER_FILE)
+        {
+            return -EFBIG;
+        }
         if(index_block->blocks[x+start_block]!=0)
         {
             unsigned char *block_info=(unsigned char*)calloc(1, BLOCK_SIZE);
@@ -655,6 +659,10 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
     int my_offset=0;
     for(x=0; x<blocks_to_read; x++)
     {
+        if((x+start_block)>=MAX_BLOCKS_PER_FILE)
+        {
+            return -ESPIPE;
+        }
         if(index_block->blocks[x+start_block]!=0)
         {
             unsigned char *block_info=(unsigned char*)calloc(1, BLOCK_SIZE);
