@@ -59,7 +59,4 @@ int main(int argc, char *argv[])
     device_close();
 
 	return fuse_stat;
-
-    //TO DO
-    //free
 }
