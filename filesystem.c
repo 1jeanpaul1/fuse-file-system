@@ -116,6 +116,8 @@ void filesystem_update_map()
 
 void filesystem_load_device_size()
 {
+    if(debug) printf("%s\n", __FUNCTION__);
+
     unsigned char *char_device_size=(unsigned char*)malloc(BLOCK_SIZE);
     device_read_block(char_device_size, 5);
     memcpy(&device_size, char_device_size, sizeof(device_size));
@@ -569,8 +571,8 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
 
     int start_block=floor(((double)offset)/BLOCK_SIZE);
     int blocks_to_write=ceil(((double)size)/BLOCK_SIZE);
-    int x;
 
+    int x;
     for(x=0; x<blocks_to_write; x++)
     {
         if((x+start_block)>=MAX_BLOCKS_PER_FILE)
@@ -650,9 +652,9 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
 
     int start_block=floor(((double)offset)/BLOCK_SIZE);
     int blocks_to_read=ceil(((double)size)/BLOCK_SIZE);
-    int x;
-
     int my_offset=0;
+
+    int x;
     for(x=0; x<blocks_to_read; x++)
     {
         if((x+start_block)>=MAX_BLOCKS_PER_FILE)

@@ -62,7 +62,6 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
 int filesystem_rename(const char *path, const char *newpath);
 int filesystem_unlink(const char *path);
 int filesystem_rmdir(const char *path);
-
 int filesystem_statfs(const char *path, struct statvfs *statInfo);
 
 #ifdef __cplusplus
