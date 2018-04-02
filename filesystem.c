@@ -90,7 +90,7 @@ void filesystem_load_map()
     device_read_block(char_map, 3);
     
     char_map=char_map_start;
-    memcpy(map, &char_map[0], BLOCK_SIZE*sizeof(uint32_t));
+    memcpy(map, char_map, BLOCK_SIZE*sizeof(uint32_t));
     free(char_map);
 }
 
@@ -100,7 +100,7 @@ void filesystem_update_map()
 
     unsigned char *char_map=(unsigned char*)calloc(1, BLOCK_SIZE*sizeof(uint32_t));
     unsigned char *char_map_start=char_map;
-    memcpy(&char_map[0], map, BLOCK_SIZE*sizeof(uint32_t));
+    memcpy(char_map, map, BLOCK_SIZE*sizeof(uint32_t));
 
     device_write_block(char_map, 0);
     char_map+=4096;
@@ -129,7 +129,7 @@ void filesystem_load_root()
     
     unsigned char *char_root=(unsigned char*)calloc(1, sizeof(root));
     device_read_block(char_root, 4);
-    memcpy(&root, &char_root[0], sizeof(root));
+    memcpy(&root, char_root, sizeof(root));
     free(char_root);
 }
 
@@ -138,7 +138,7 @@ void filesystem_update_root()
     if(debug) printf("%s\n", __FUNCTION__);
     
     unsigned char *char_root=(unsigned char*)calloc(1, sizeof(root));
-    memcpy(&char_root[0], &root, sizeof(root));
+    memcpy(char_root, &root, sizeof(root));
     device_write_block(char_root, 4);
     free(char_root);
 }
@@ -152,7 +152,7 @@ struct Directory* filesystem_load_directory(int n)
 
     struct Directory *directory=(struct Directory *)calloc(1, sizeof(*directory));
 
-    memcpy(directory, &char_directory[0], sizeof(*directory));
+    memcpy(directory, char_directory, sizeof(*directory));
     free(char_directory);
     
     return directory;
@@ -167,7 +167,7 @@ void filesystem_free_blocks(struct Directory_entry *entry)
 
     struct Index_block *index_block=(struct Index_block *)calloc(1, sizeof(struct Index_block));
 
-    memcpy(index_block, &char_index[0], sizeof(*index_block));
+    memcpy(index_block, char_index, sizeof(*index_block));
     free(char_index);
 
     int i;
@@ -222,8 +222,8 @@ struct Directory_entry *filesystem_get_entry(const char *name)
         char directory_name[MAX_FILE_NAME+1];
         memset(directory_name, '\0', MAX_FILE_NAME+1);
 
-        memcpy(&directory_name, &name[0], i);
-        struct Directory_entry* entry=filesystem_get_entry(&directory_name[0]);
+        memcpy(&directory_name, name, i);
+        struct Directory_entry* entry=filesystem_get_entry(directory_name);
 
         if(entry==NULL)
         {
@@ -264,7 +264,7 @@ void filesystem_get_file_size(struct Directory_entry* entry, int *size, int *blo
 
     struct Index_block *index_block=(struct Index_block *)calloc(1, sizeof(struct Index_block));
 
-    memcpy(index_block, &char_index[0], sizeof(*index_block));
+    memcpy(index_block, char_index, sizeof(*index_block));
     free(char_index);
 
     int i;
@@ -316,7 +316,7 @@ int filesystem_getattr(const char *path, struct stat *statbuf)
     }
     else
     {
-        struct Directory_entry* entry=filesystem_get_entry(&path[0]);
+        struct Directory_entry* entry=filesystem_get_entry(path);
         if(entry==NULL)
         {
             return -ENOENT;
@@ -400,7 +400,7 @@ int filesystem_mkdir(const char *path, mode_t mode)
     }
 
     unsigned char *char_directory=(unsigned char*)calloc(1, sizeof(directory));
-    memcpy(&char_directory[0], &directory, sizeof(directory));
+    memcpy(char_directory, &directory, sizeof(directory));
     device_write_block(char_directory, root.entries[i].index_block);
 
     free(char_directory);
@@ -422,7 +422,7 @@ int filesystem_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, o
 	}
     else
     {
-        struct Directory_entry* entry=filesystem_get_entry(&path[0]);
+        struct Directory_entry* entry=filesystem_get_entry(path);
 
         if(entry==NULL)
         {
@@ -454,7 +454,7 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
 
     if(S_ISREG(mode)) 
     {
-        struct Directory_entry* entry=filesystem_get_entry(&path[0]);
+        struct Directory_entry* entry=filesystem_get_entry(path);
 
         if(entry!=NULL)
         {
@@ -484,8 +484,8 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
         {
             char directory_name[MAX_FILE_NAME+1];
             memset(directory_name, '\0', MAX_FILE_NAME+1);
-            memcpy(&directory_name, &path[0], i);
-            entry=filesystem_get_entry(&directory_name[0]);
+            memcpy(&directory_name, path, i);
+            entry=filesystem_get_entry(directory_name);
 
             if(entry==NULL)
             {
@@ -533,12 +533,12 @@ int filesystem_mknod(const char *path, mode_t mode, dev_t dev)
         }
 
         unsigned char *char_directory=(unsigned char*)calloc(1, sizeof(*directory));
-        memcpy(&char_directory[0], directory, sizeof(*directory));
+        memcpy(char_directory, directory, sizeof(*directory));
         device_write_block(char_directory, block);
         free(char_directory);
 
         unsigned char *char_index=(unsigned char*)calloc(1, sizeof(index_block));
-        memcpy(&char_index[0], &index_block, sizeof(index_block));
+        memcpy(char_index, &index_block, sizeof(index_block));
         device_write_block(char_index, directory->entries[j].index_block);
         free(char_index);
 
@@ -551,7 +551,7 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
 {
     if(debug) printf("%s\n", __FUNCTION__);
 
-    struct Directory_entry* entry=filesystem_get_entry(&path[0]);
+    struct Directory_entry* entry=filesystem_get_entry(path);
    
     if(entry==NULL)
     {
@@ -563,7 +563,7 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
 
     struct Index_block *index_block=(struct Index_block *)calloc(1, sizeof(struct Index_block));
 
-    memcpy(index_block, &char_index[0], sizeof(*index_block));
+    memcpy(index_block, char_index, sizeof(*index_block));
     free(char_index);
 
 
@@ -579,7 +579,7 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
         }
         if(index_block->blocks[x+start_block]!=0)
         {
-            unsigned char *block_info=(unsigned char*)calloc(1, BLOCK_SIZE);
+            unsigned char *block_info=(unsigned char*)malloc(BLOCK_SIZE);
             memset(block_info, MY_NULL, BLOCK_SIZE);
             
             device_read_block(block_info, index_block->blocks[x+start_block]);
@@ -609,11 +609,11 @@ int filesystem_write(const char *path, const char *buf, size_t size, off_t offse
             index_block->blocks[x+start_block]=new_block;
 
             unsigned char *char_index=(unsigned char*)calloc(1, sizeof(*index_block));
-            memcpy(&char_index[0], index_block, sizeof(*index_block));
+            memcpy(char_index, index_block, sizeof(*index_block));
             device_write_block(char_index, entry->index_block);
             free(char_index);
 
-            unsigned char *block_info=(unsigned char *)calloc(1, BLOCK_SIZE);
+            unsigned char *block_info=(unsigned char *)malloc(BLOCK_SIZE);
             memset(block_info, MY_NULL, BLOCK_SIZE);
 
             memcpy(block_info, buf, size);
@@ -631,7 +631,7 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
 {
     if(debug) printf("%s\n", __FUNCTION__);
 
-    struct Directory_entry* entry=filesystem_get_entry(&path[0]);
+    struct Directory_entry* entry=filesystem_get_entry(path);
 
     if(entry==NULL)
     {
@@ -645,7 +645,7 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
 
     struct Index_block *index_block=(struct Index_block *)calloc(1, sizeof(struct Index_block));
 
-    memcpy(index_block, &char_index[0], sizeof(*index_block));
+    memcpy(index_block, char_index, sizeof(*index_block));
     free(char_index);
 
     int start_block=floor(((double)offset)/BLOCK_SIZE);
@@ -704,7 +704,7 @@ int filesystem_rename(const char *path, const char *newpath)
             return -ENAMETOOLONG;
         }
         
-        struct Directory_entry* entry=filesystem_get_entry(&path[0]);
+        struct Directory_entry* entry=filesystem_get_entry(path);
 
         if(entry==NULL)
         {
@@ -725,9 +725,9 @@ int filesystem_rename(const char *path, const char *newpath)
 
         char directory_name[MAX_FILE_NAME+1];
         memset(directory_name, '\0', MAX_FILE_NAME+1);
-        memcpy(&directory_name, &path[0], i);
+        memcpy(&directory_name, path, i);
 
-        struct Directory_entry* entry=filesystem_get_entry(&directory_name[0]);
+        struct Directory_entry* entry=filesystem_get_entry(directory_name);
 
         if(entry==NULL)
         {
@@ -752,7 +752,7 @@ int filesystem_rename(const char *path, const char *newpath)
                     strcpy(directory->entries[i].name, &newpath[name_start]);
 
                     unsigned char *char_directory=(unsigned char*)calloc(1, sizeof(*directory));
-                    memcpy(&char_directory[0], directory, sizeof(*directory));
+                    memcpy(char_directory, directory, sizeof(*directory));
                     device_write_block(char_directory, entry->index_block);
                     free(char_directory);
 
@@ -783,7 +783,7 @@ int filesystem_unlink(const char *path)
 
     if(in_root)
     {
-        struct Directory_entry* entry=filesystem_get_entry(&path[0]);
+        struct Directory_entry* entry=filesystem_get_entry(path);
 
         if(entry==NULL)
         {
@@ -800,9 +800,9 @@ int filesystem_unlink(const char *path)
     {
         char directory_name[MAX_FILE_NAME+1];
         memset(directory_name, '\0', MAX_FILE_NAME+1);
-        memcpy(&directory_name, &path[0], i);
+        memcpy(&directory_name, path, i);
 
-        struct Directory_entry* entry=filesystem_get_entry(&directory_name[0]);
+        struct Directory_entry* entry=filesystem_get_entry(directory_name);
 
         if(entry==NULL)
         {
@@ -826,7 +826,7 @@ int filesystem_unlink(const char *path)
                     directory->entries[i].index_block=0;
 
                     unsigned char *char_directory=(unsigned char*)calloc(1, sizeof(*directory));
-                    memcpy(&char_directory[0], directory, sizeof(*directory));
+                    memcpy(char_directory, directory, sizeof(*directory));
                     device_write_block(char_directory, entry->index_block);
                     free(char_directory);
 
@@ -844,7 +844,7 @@ int filesystem_rmdir(const char *path)
 {
     if(debug) printf("%s\n", __FUNCTION__);
 
-    struct Directory_entry* entry=filesystem_get_entry(&path[0]);
+    struct Directory_entry* entry=filesystem_get_entry(path);
 
     if(entry==NULL)
     {
