@@ -1,8 +1,4 @@
 #include "filesystem.h"
-#include <limits.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
 #include <math.h>
 
 #define BITS_PER_WORD 32
@@ -810,7 +806,7 @@ int filesystem_unlink(const char *path)
 
         if(entry==NULL)
         {
-            return -ENOENT;;
+            return -ENOENT;
         }
 
         struct Directory *directory=filesystem_load_directory(entry->index_block);

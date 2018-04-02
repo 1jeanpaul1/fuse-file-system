@@ -1,5 +1,4 @@
 #include "filesystem.h"
-#include <stdio.h>
 #include <stdlib.h>
 
 static struct fuse_operations operations={
