@@ -270,9 +270,12 @@ void filesystem_get_file_size(struct Directory_entry* entry, int *size, int *blo
     free(char_index);
 
     int i;
-    for(i=0; index_block->blocks[i]!=0; i++)
+    for(i=0; i<MAX_BLOCKS_PER_FILE; i++)
     {
-        (*blocks)++;
+        if(index_block->blocks[i]!=0)
+        {
+            (*blocks)++;
+        }
     }
 
     for(i=0; i<(*blocks)-1; i++)
@@ -659,7 +662,7 @@ int filesystem_read(const char *path, char *buf, size_t size, off_t offset, stru
     {
         if((x+start_block)>=MAX_BLOCKS_PER_FILE)
         {
-            return -ESPIPE;
+            return 0;
         }
         if(index_block->blocks[x+start_block]!=0)
         {
