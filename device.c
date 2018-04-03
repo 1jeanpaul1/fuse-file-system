@@ -1,8 +1,5 @@
 #include "device.h"
 #include "filesystem.h"
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
 #include <stdlib.h>
 
 static FILE *f;
@@ -21,9 +18,9 @@ void device_new_disk(const char *path, int device_size)
 	}
     empty_blocks[0]=0xFFFFFFC0;
 
-    unsigned char *char_map=(unsigned char*)calloc(1, BLOCK_SIZE*sizeof(uint32_t));
+    unsigned char *char_map=(unsigned char*)malloc(BLOCK_SIZE*sizeof(uint32_t));
     unsigned char *char_map_start=char_map;
-    memcpy(&char_map[0], empty_blocks, BLOCK_SIZE*sizeof(uint32_t));
+    memcpy(char_map, empty_blocks, BLOCK_SIZE*sizeof(uint32_t));
 
     device_write_block(char_map, 0);
     char_map+=4096;
@@ -43,8 +40,8 @@ void device_new_disk(const char *path, int device_size)
         root.entries[i].index_block=0;
     }
 
-    unsigned char *char_root=(unsigned char*)calloc(1, sizeof(root));
-    memcpy(&char_root[0], &root, sizeof(root));
+    unsigned char *char_root=(unsigned char*)malloc(sizeof(root));
+    memcpy(char_root, &root, sizeof(root));
     device_write_block(char_root, 4);
 
     free(char_root);
@@ -111,9 +108,9 @@ void device_format()
 	}
     empty_blocks[0]=0xFFFFFFC0;
 
-    unsigned char *char_map=(unsigned char*)calloc(1, BLOCK_SIZE*sizeof(uint32_t));
+    unsigned char *char_map=(unsigned char*)malloc(BLOCK_SIZE*sizeof(uint32_t));
     unsigned char *char_map_start=char_map;
-    memcpy(&char_map[0], empty_blocks, BLOCK_SIZE*sizeof(uint32_t));
+    memcpy(char_map, empty_blocks, BLOCK_SIZE*sizeof(uint32_t));
 
     device_write_block(char_map, 0);
     char_map+=4096;
@@ -133,8 +130,8 @@ void device_format()
         root.entries[i].index_block=0;
     }
 
-    unsigned char *char_root=(unsigned char*)calloc(1, sizeof(root));
-    memcpy(&char_root[0], &root, sizeof(root));
+    unsigned char *char_root=(unsigned char*)malloc(sizeof(root));
+    memcpy(char_root, &root, sizeof(root));
     device_write_block(char_root, 4);
 
     free(char_root);

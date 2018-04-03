@@ -3,5 +3,5 @@
 for i in `seq 1 128`
 do
     mkdir device/folder$i
-    cp ~/Documents/1.tra device/folder$i
+    cp ~/Documents/max_size.file device/folder$i
 done
